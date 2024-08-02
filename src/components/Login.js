@@ -2,6 +2,9 @@ import React, { useRef, useState } from 'react'
 import Header from './Header'
 import { IMG_URL } from '../utils/constant'
 import {validateForm} from '../utils/formValidator.js';
+import { createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../utils/firebase.js';
+
 
 const Login = () => {
     const [sign,setSign]=useState(false);
@@ -13,13 +16,50 @@ const Login = () => {
     const handleForm=()=>{
        
         const message=validateForm(email.current.value,PassWord.current.value);
-        if(message==null) {
-            setErrorMessage(sign ? "sign UP succesful" :" sign IN successful");
+        setErrorMessage(message);
+
+        if(message!=null){
+            console.log('error')
+            setErrorMessage(message);
             return;
         }
-         setErrorMessage(message);
-         console.log(errormessage);
-        return;
+          
+        if(sign){
+           
+            createUserWithEmailAndPassword(auth,email.current.value, PassWord.current.value)
+            .then((userCredential) => {
+                // Signed up 
+                const user = userCredential.user;
+             
+                setErrorMessage("successful sign up")
+                // ...
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                setErrorMessage(errorCode+" "+errorMessage);
+                // ..
+            });
+        }else{
+            //sign In
+            console.log("sign IN 3");
+            signInWithEmailAndPassword(auth, email.current.value, PassWord.current.value)
+            .then((userCredential) => {
+                 
+                const user = userCredential.user;
+                 setErrorMessage("successfully SIGN In")
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                setErrorMessage(errorCode+" "+errorMessage);
+            });
+
+
+        }
+           
+       
+        
     }
 
   return (
