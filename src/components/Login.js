@@ -2,20 +2,25 @@ import React, { useRef, useState } from 'react'
 import Header from './Header'
 import { IMG_URL } from '../utils/constant'
 import {validateForm} from '../utils/formValidator.js';
-import { createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword,signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from '../utils/firebase.js';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addUser } from '../utils/userSlice.js';
 
 
 const Login = () => {
     const [sign,setSign]=useState(false);
     const [errormessage,setErrorMessage]=useState(null);
+    const dispatch=useDispatch();
     const name=useRef(null);
     const email=useRef(null);
-    const  PassWord=useRef(null);
+    const  password=useRef(null);
+    const navigate=useNavigate();
 
     const handleForm=()=>{
        
-        const message=validateForm(email.current.value,PassWord.current.value);
+        const message=validateForm(email.current.value,password.current.value);
         setErrorMessage(message);
 
         if(message!=null){
@@ -26,12 +31,26 @@ const Login = () => {
           
         if(sign){
            
-            createUserWithEmailAndPassword(auth,email.current.value, PassWord.current.value)
+            createUserWithEmailAndPassword(auth,email.current.value, password.current.value)
             .then((userCredential) => {
                 // Signed up 
                 const user = userCredential.user;
-             
-                setErrorMessage("successful sign up")
+                updateProfile(user, {
+                    displayName: name.current.value, photoURL: "https://avatars.githubusercontent.com/u/121222791?v=4&size=64",
+                  }).then(() => {
+                     const {uid,email,displayName,photoURL} =auth.currentUser;
+                      dispatch(addUser({uid:uid,
+                    email:email,
+                    displayName:displayName,
+                    photoURL:photoURL}));
+
+                    navigate('/');
+
+                  }).catch((error) => {
+                   setErrorMessage(error);
+                  });
+                
+              
                 // ...
             })
             .catch((error) => {
@@ -43,11 +62,14 @@ const Login = () => {
         }else{
             //sign In
             console.log("sign IN 3");
-            signInWithEmailAndPassword(auth, email.current.value, PassWord.current.value)
-            .then((userCredential) => {
-                 
+            signInWithEmailAndPassword(auth, email.current.value, password.current.value)
+            .then((userCredential) => {               
                 const user = userCredential.user;
+                const {displayName}=auth.currentUser;
+                dispatch(addUser({displayName:displayName}))
                  setErrorMessage("successfully SIGN In")
+                 navigate('/browse');
+                
             })
             .catch((error) => {
                 const errorCode = error.code;
@@ -76,7 +98,7 @@ const Login = () => {
          <h1 className='text-4xl p-2 m-3'>{sign?"SIGN UP":"SIGN IN"}</h1>
          { sign &&  <input type='text' ref={name} placeholder='Enter Name...' className='p-4 my-2 mx-2 rounded-lg bg-gray-600'  required/> }
          <input type='text' ref={email} placeholder='Enter Email...' className='p-4 my-2 mx-2 rounded-lg bg-gray-600' required />
-            <input type='text' ref={PassWord} placeholder='Enter PassWord...' className='p-4 my-2 mx-2 bg-gray-500 rounded-lg' required />
+            <input type='text' ref={password} placeholder='Enter password...' className='p-4 my-2 mx-2 bg-gray-500 rounded-lg' required />
             <p className='p-2 m-2 text-red-800 font-bold text-lg!'>{errormessage}</p>
             <button className='p-4 my-2 mx-2 bg-red-700 rounded-lg' type='text' onClick={handleForm} >{sign ?"SIGN UP":"SIGN IN"}</button>
             <p className='p-2 m-2 text-red-600 cursor-pointer' onClick={()=>setSign(!sign)}>
