@@ -44,8 +44,7 @@ const Login = () => {
                     displayName:displayName,
                     photoURL:photoURL}));
 
-                    navigate('/');
-
+                   
                   }).catch((error) => {
                    setErrorMessage(error);
                   });
@@ -68,7 +67,8 @@ const Login = () => {
                 const {displayName}=auth.currentUser;
                 dispatch(addUser({displayName:displayName}))
                  setErrorMessage("successfully SIGN In")
-                 navigate('/browse');
+               
+                 
                 
             })
             .catch((error) => {
@@ -87,7 +87,7 @@ const Login = () => {
   return (
     <div>
      <Header/>
-     <div className='absolute'>
+     <div className='absolute '>
         <img src={IMG_URL}
         className='h-full w-full '
          alt="not found"/>
